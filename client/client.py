@@ -5,6 +5,7 @@ import threading, time, logging
 from random import random
 import signal
 
+from hardware_interfacing import read_moisture_sensor, run_pump
 
 
 # set logging output format
@@ -12,13 +13,13 @@ logging.basicConfig(level=logging.INFO, format='%(threadName)s (%(thread)s):\t%(
 
 
 # minium amount of time between event executions (seconds)
-EVENT_EXECUTION_PERIOD = 10
+EVENT_EXECUTION_PERIOD = 30
 
 # amount of time between GET/POST requests (seconds)
-BATCH_UPDATE_PERIOD = 10 * 60   # every 10 minutes
+BATCH_UPDATE_PERIOD = 30 * 60   # every 30 minutes
 
 
-BASE_URL = 'http://localhost:8000/'
+BASE_URL = 'http://192.168.1.156:8000/'
 TASKS_UPDATE_URL = urljoin(BASE_URL, 'next_tasks/')
 SENSOR_UPDATE_URL = urljoin(BASE_URL, 'sensor_update/')
 TASK_NOTIFICATION_URL = urljoin(BASE_URL, 'notify_task/')
@@ -36,13 +37,13 @@ class Client:
 
     # execute the given command; return an error message if execution fails
     def execute_command(self, command):
-        logging.info(f'Executing command: {command}... ')
+        logging.info('Executing command: %s... ' % command)
         time.sleep(10)
         error_message = None
         if error_message is None:
             logging.info('Command executed successfully')
         else:
-            logging.error(f'Command failed with error message: {error_message}')
+            logging.error('Command failed with error message: %s' % error_message)
         return error_message
     
     # download the next tasks from the server
@@ -50,10 +51,10 @@ class Client:
         logging.info('Checking for task updates...')
         response = requests.get(TASKS_UPDATE_URL)
         if response.ok:
-            logging.info(f'Update downloaded successfully')
+            logging.info('Update downloaded successfully')
         else:
-            logging.error(f'Failed to download update with status code: {response.status_code} ({response.reason})')
-        return json.loads(response.content)
+            logging.error('Failed to download update with status code: %s (%s)' % (response.status_code, response.reason))
+        return response.json()
     
     def post_sensor_update(self):
         logging.info('Reading sensor values... ')
@@ -61,8 +62,8 @@ class Client:
             'password': UPLOAD_PASSWORD,
             'sensors': [
                 {
-                    'sensor_name': 'test sensor',
-                    'value': random(),
+                    'sensor_name': 'soil moisture sensor',
+                    'value': read_moisture_sensor(),
                     'time': round(time.time()),
                 },
                 {
@@ -72,6 +73,7 @@ class Client:
                 }
             ]
         }
+        print(status_update)
         logging.info('Done')
 
         logging.info('Posting sensor update... ')
@@ -79,7 +81,7 @@ class Client:
         if response.ok:
             logging.info('Sensor update posted successfully')
         else:
-            logging.error(f'Failed to post sensor update with status code: {response.status_code} ({response.reason})')
+            logging.error('Failed to post sensor update with status code: %s (%s)' % (response.status_code, response.reason))
     
     def notify_task_completed(self, task):
         logging.info('Posting task completion notification... ')
@@ -97,7 +99,7 @@ class Client:
             current_time = time.time()
             for task in self.scheduled_tasks:
                 if task['next_time'] <= current_time:
-                    logging.info(f'Queuing task #{task["task_id"]}')
+                    logging.info('Queuing task #%s' % {task["task_id"]})
                     with self.execution_lock:
                         self.execute_command(task['command'])
                         self.notify_task_completed(task)
@@ -113,7 +115,7 @@ class Client:
                 if self.scheduled_tasks == new_tasks:
                     logging.info('No new tasks found')
                 else:
-                    logging.info(f'New tasks found: {new_tasks}')
+                    logging.info('New tasks found: %s' % new_tasks)
                     self.scheduled_tasks = new_tasks
                 
             # POST sensor status update to server (after waiting for any in_progress commands to finish executing)
@@ -128,7 +130,8 @@ class Client:
         self.status_updates_worker = threading.Thread(target=self._run_updates, name='UpdatesWorker', daemon=True)
         self.tasks_worker.start()
         self.status_updates_worker.start()
-        logging.info(f'Client started with worker threads "{self.tasks_worker.name}" ({self.tasks_worker.ident}) and "{self.status_updates_worker.name}" ({self.status_updates_worker.ident})')
+        logging.info('Client started with worker threads "%s" (%s) and "%s" (%s)' %
+                     (self.tasks_worker.name, self.tasks_worker.ident, self.status_updates_worker.name, self.status_updates_worker.ident))
     
     def stop(self):
         logging.info('Stopping all workers...')
