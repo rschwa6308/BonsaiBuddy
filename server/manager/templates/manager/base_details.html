@@ -1,0 +1,8 @@
+{% extends 'manager/base.html' %}
+
+{% block content %}
+    <div id='details'>
+        {% block details %}{% endblock %}
+    </div>
+    <a href={% block edit_url %}{% endblock %}>Edit in Admin</a>
+{% endblock %}

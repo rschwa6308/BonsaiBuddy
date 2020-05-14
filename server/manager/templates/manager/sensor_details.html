@@ -1,0 +1,90 @@
+
+
+
+
+{% extends 'manager/base_details.html' %}
+
+{% block title %}
+    Sensor #{{ sensor.id }}
+{% endblock %}
+
+{% block head %}
+    <script src='http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js'></script>
+    <script src='http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.bundle.js'></script>
+{% endblock %}
+
+{% block heading %}
+    {{ sensor.name|title }}
+{% endblock %}
+
+{% block details %}
+    <div id='container'>
+        <canvas id='line-chart' data-url='{% url "sensor_data" sensor.id %}'></canvas>
+    </div>
+
+    <script>            
+        function dateFromTimestamp(timestamp) {
+            return moment.unix(timestamp);
+        }
+
+        $(function () {
+            var $lineChart = $('#line-chart');
+            $.ajax({
+                url: $lineChart.data('url'),
+                success: function (sensor_data) {
+                    console.log(sensor_data)
+                    var ctx = $lineChart[0].getContext('2d');
+                    var config = {
+                        type: 'line',
+                        data: {
+                            datasets: [{
+                                data: sensor_data.data,
+                                borderColor: 'blue'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            title:      {
+                                display: true,
+                                text: 'Sensor Readings'
+                            },
+                            scales: {
+                                xAxes: [{
+                                    type: 'time',
+                                    time: {
+                                        parser: dateFromTimestamp,
+                                        tooltipFormat: 'll h:mm a',
+                                        round: 'minute',
+                                        displayFormats: {
+                                            minute: 'h:mm a'
+                                        }
+                                    },
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: 'Date'
+                                    }
+                                }],
+                                yAxes: [{
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: 'value'
+                                    }
+                                }]
+                            },
+                            legend: {
+                                display: false
+                            }
+                        }
+                    };
+
+                    window.lineChart = new Chart(ctx, config);
+                }
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block edit_url %}
+    {% url 'admin:manager_sensor_change' sensor.id %}
+{% endblock %}

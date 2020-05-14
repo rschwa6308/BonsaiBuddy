@@ -1,0 +1,20 @@
+{% extends 'manager/base_details.html' %}
+
+{% block title %}
+    Task #{{ task.id }}
+{% endblock %}
+
+{% block heading %}
+    {{ task.name|title }}
+{% endblock %}
+
+{% block details %}
+    <p>Description: {{ task.description }}</p>
+    <p>Period: {{ task.period }}</p>
+    <p>Last completed: {{ task.last_completed_time.date }} at {{ task.last_completed_time.time }}</p>
+    <p>Next scheduled: {{ task.next_scheduled_time.date }} at {{ task.next_scheduled_time.time }}</p>
+{% endblock %}
+
+{% block edit_url %}
+    {% url 'admin:manager_task_change' task.id %}
+{% endblock %}

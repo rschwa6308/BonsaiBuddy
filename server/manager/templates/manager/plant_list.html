@@ -1,0 +1,21 @@
+{% extends 'manager/base_list.html' %}
+
+{% block title %}
+    Plants
+{% endblock %}
+
+{% block heading %}
+    Plants
+{% endblock %}
+
+{% block list %}
+{% if plants %}
+    <ul>
+    {% for plant in plants %}
+        <li><a href="{% url 'plant_details' plant.id %}">{{ plant.name|title }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No plants found.</p>
+{% endif %}
+{% endblock %}

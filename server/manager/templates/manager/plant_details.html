@@ -1,0 +1,32 @@
+{% extends 'manager/base_details.html' %}
+
+{% block title %}
+    Plant #{{ plant.id }}
+{% endblock %}
+
+{% block heading %}
+    {{ plant.name }}
+{% endblock %}
+
+{% block details %}
+    <h3>Tasks</h3>
+    <ul>
+    {% for task in plant.get_tasks %}
+        <li><a href="{% url 'task_details' task.id %}">{{ task.name|title }}</a> scheduled for <b>{{ task.next_scheduled_time.date }}</b> at <b>{{ task.next_scheduled_time.time }}</b></li>
+    {% endfor %}
+    </ul>
+
+    <h3>Sensors</h3>
+    <ul>
+    {% for sensor in plant.get_sensors %}
+        <li>
+            <a href="{% url 'sensor_details' sensor.id %}">{{ sensor.name|title }}</a>
+            latest reading: {% if sensor.latest_reading %}<b>{{ sensor.latest_reading.value }}</b> ({{ sensor.latest_reading.time }}) {% else %} <b>none found</b> {% endif %}
+        </li>
+    {% endfor %}
+    </ul>
+{% endblock %}
+
+{% block edit_url %}
+    {% url 'admin:manager_plant_change' plant.id %}
+{% endblock %}

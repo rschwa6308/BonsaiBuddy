@@ -1,0 +1,21 @@
+{% extends 'manager/base_list.html' %}
+
+{% block title %}
+    Tasks
+{% endblock %}
+
+{% block heading %}
+    Tasks
+{% endblock %}
+
+{% block list %}
+{% if tasks %}
+    <ul>
+    {% for task in tasks %}
+        <li><a href="{% url 'task_details' task.id %}">{{ task.name|title }}</a> scheduled for <b>{{ task.next_scheduled_time.date }}</b> at <b>{{ task.next_scheduled_time.time }}</b></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No tasks found.</p>
+{% endif %}
+{% endblock %}

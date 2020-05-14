@@ -1,0 +1,19 @@
+{% extends 'manager/base.html' %}
+
+{% block title %}
+    BonsaiBuddy
+{% endblock %}
+
+{% block heading %}
+    BonsaiBuddy Home
+{% endblock %}
+
+{% block content %}
+    <ul>
+        <li><a href={% url 'plant_list' %}>Plants</a></li>
+        <li><a href={% url 'task_list' %}>Tasks</a></li>
+        <li><a href={% url 'sensor_list' %}>Sensors</a></li>
+        <li><a href={% url 'task_history' %}>History</a></li>
+        <li><a href={% url 'admin:index' %}>Admin</a></li>
+    </ul>
+{% endblock %}

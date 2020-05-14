@@ -1,0 +1,24 @@
+{% extends 'manager/base_list.html' %}
+
+{% block title %}
+    Sensors
+{% endblock %}
+
+{% block heading %}
+    Sensors
+{% endblock %}
+
+{% block list %}
+{% if sensors %}
+    <ul>
+    {% for sensor in sensors %}
+        <li>
+            <a href="{% url 'sensor_details' sensor.id %}">{{ sensor.name|title }}</a>
+            latest reading: {% if sensor.latest_reading %}<b>{{ sensor.latest_reading.value }}</b> ({{ sensor.latest_reading.time }}) {% else %} <b>none found</b> {% endif %}
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No sensors found.</p>
+{% endif %}
+{% endblock %}

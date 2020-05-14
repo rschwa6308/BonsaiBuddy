@@ -1,0 +1,21 @@
+{% extends 'manager/base_list.html' %}
+
+{% block title %}
+    Task History
+{% endblock %}
+
+{% block heading %}
+    Task History
+{% endblock %}
+
+{% block list %}
+{% if task_logs %}
+    <ul>
+    {% for log in task_logs %}
+        <li>{{ log }}</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No task logs found.</p>
+{% endif %}
+{% endblock %}
