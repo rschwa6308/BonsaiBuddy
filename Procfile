@@ -1,0 +1,1 @@
+web: gunicorn server/BonsaiBuddyServer.wsgi --log-file -

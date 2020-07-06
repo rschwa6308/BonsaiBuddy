@@ -10,6 +10,7 @@
 
 {% block details %}
     <p>Description: {{ task.description }}</p>
+    <p>Command: <b>{{ task.command }}</b></p>
     <p>Period: {{ task.period }}</p>
     <p>Last completed: {{ task.last_completed_time.date }} at {{ task.last_completed_time.time }}</p>
     <p>Next scheduled: {{ task.next_scheduled_time.date }} at {{ task.next_scheduled_time.time }}</p>

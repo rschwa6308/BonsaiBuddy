@@ -141,8 +141,6 @@ def notify_task_completed(request):
         if content['password'] != UPLOAD_PASSWORD:
             return HttpResponse(status=403)
         
-        print('hi!')
-
         task = Task.objects.get(pk=content['task_id'])
         task.last_completed_time = datetime.fromtimestamp(content['completion_time'])
         task.save()
