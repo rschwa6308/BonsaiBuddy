@@ -1,1 +1,1 @@
-web: gunicorn server/BonsaiBuddyServer.wsgi --log-file -
+web: gunicorn BonsaiBuddyServer.wsgi --log-file -git 
