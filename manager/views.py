@@ -160,9 +160,8 @@ def task_history(request):
         with open(TASKS_LOG_FILENAME, 'r') as f:
             task_logs += f.read().split('\n')
     
-    # strip off log timestamps and reverse order
-    task_logs = [l[32:] for l in task_logs][::-1]
-    task_logs.remove('')
+    # strip off log timestamps, exclude empty strings, and reverse order
+    task_logs = [l[32:] for l in task_logs if l][::-1]
     return render(
         request,
         'manager/task_history.html',
