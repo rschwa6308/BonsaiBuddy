@@ -155,8 +155,10 @@ def notify_task_completed(request):
 
 TASKS_LOG_FILENAME = os.path.join(settings.LOGS_DIR, 'tasks.log')
 def task_history(request):
-    with open(TASKS_LOG_FILENAME, 'r') as f:
-        task_logs = f.read().split('\n')
+    task_logs = []
+    if os.path.isfile(TASKS_LOG_FILENAME):
+        with open(TASKS_LOG_FILENAME, 'r') as f:
+            task_logs += f.read().split('\n')
     
     # strip off log timestamps and reverse order
     task_logs = [l[32:] for l in task_logs][::-1]
