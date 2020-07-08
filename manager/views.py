@@ -103,7 +103,7 @@ def next_tasks(request):
     })
 
 
-UPLOAD_PASSWORD = 'password'
+UPLOAD_PASSWORD = os.environ.get('UPLOAD_PASSWORD')     # provided by heroku Config Vars
 
 @csrf_exempt 
 def sensor_update(request):
