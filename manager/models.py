@@ -44,8 +44,8 @@ class Sensor(models.Model):
 class Plant(models.Model):
     name = models.CharField(max_length=60)
     # associated tasks and sensors
-    tasks = models.ManyToManyField(Task)
-    sensors = models.ManyToManyField(Sensor)
+    tasks = models.ManyToManyField(Task, blank=True)
+    sensors = models.ManyToManyField(Sensor, blank=True)
 
     def get_tasks(self):
         return self.tasks.order_by('name')

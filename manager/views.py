@@ -103,7 +103,7 @@ def next_tasks(request):
     })
 
 
-UPLOAD_PASSWORD = 'password'
+UPLOAD_PASSWORD = os.environ.get('UPLOAD_PASSWORD')     # provided by heroku Config Vars
 
 @csrf_exempt 
 def sensor_update(request):
@@ -141,8 +141,6 @@ def notify_task_completed(request):
         if content['password'] != UPLOAD_PASSWORD:
             return HttpResponse(status=403)
         
-        print('hi!')
-
         task = Task.objects.get(pk=content['task_id'])
         task.last_completed_time = datetime.fromtimestamp(content['completion_time'])
         task.save()
@@ -157,12 +155,13 @@ def notify_task_completed(request):
 
 TASKS_LOG_FILENAME = os.path.join(settings.LOGS_DIR, 'tasks.log')
 def task_history(request):
-    with open(TASKS_LOG_FILENAME, 'r') as f:
-        task_logs = f.read().split('\n')
+    task_logs = []
+    if os.path.isfile(TASKS_LOG_FILENAME):
+        with open(TASKS_LOG_FILENAME, 'r') as f:
+            task_logs += f.read().split('\n')
     
-    # strip off log timestamps and reverse order
-    task_logs = [l[32:] for l in task_logs][::-1]
-    task_logs.remove('')
+    # strip off log timestamps, exclude empty strings, and reverse order
+    task_logs = [l[32:] for l in task_logs if l][::-1]
     return render(
         request,
         'manager/task_history.html',
