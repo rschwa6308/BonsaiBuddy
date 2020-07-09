@@ -130,3 +130,6 @@ dmypy.json
 
 # VSCode config files
 .vscode
+
+# Production secrets
+secrets.py

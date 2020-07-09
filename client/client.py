@@ -4,26 +4,51 @@ import json
 import threading, time, logging
 from random import random
 import signal
+import re
+import os
 
-from hardware_interfacing import read_moisture_sensor, run_pump
+from hardware_interfacing import read_moisture_sensor, read_light_sensor, pump_volume, cleanup_io
 
 
 # set logging output format
-logging.basicConfig(level=logging.INFO, format='%(threadName)s (%(thread)s):\t%(message)s')
+logging.basicConfig(level=logging.INFO, format='%(threadName)s:\t%(message)s')
 
 
 # minium amount of time between event executions (seconds)
 EVENT_EXECUTION_PERIOD = 30
 
 # amount of time between GET/POST requests (seconds)
-BATCH_UPDATE_PERIOD = 30 * 60   # every 30 minutes
+BATCH_UPDATE_PERIOD = 60 * 60   # every 60 minutes
 
 
-BASE_URL = 'http://192.168.1.156:8000/'
+BASE_URL = 'https://bonsai-buddy-controller.herokuapp.com/'
 TASKS_UPDATE_URL = urljoin(BASE_URL, 'next_tasks/')
 SENSOR_UPDATE_URL = urljoin(BASE_URL, 'sensor_update/')
 TASK_NOTIFICATION_URL = urljoin(BASE_URL, 'notify_task/')
-UPLOAD_PASSWORD = 'password'
+
+# UPLOAD_PASSWORD = os.environ.get('UPLOAD_PASSWORD')
+from secrets import UPLOAD_PASSWORD
+
+
+def do_nothing():
+    print('Doing nothing!!!')
+
+
+# TARGET_POS_MAP = {
+#     'ROBERTO':      0.4,
+#     'TEST_TARGET':  0.7
+# }
+
+def pump_volume_with_target_name(volume, target_name):
+    # target_pos = TARGET_POS_MAP[target_name.upper()]
+    # pump_volume_with_target_pos(int(volume), target_pos)
+    pump_volume(volume)
+
+
+COMMANDS = [
+    (r'NOOP', do_nothing),
+    (r'pump (\d+)ml to (\w+)', pump_volume_with_target_name)
+]
 
 
 class Client:
@@ -37,13 +62,29 @@ class Client:
 
     # execute the given command; return an error message if execution fails
     def execute_command(self, command):
-        logging.info('Executing command: %s... ' % command)
-        time.sleep(10)
+        logging.info('Executing command: "%s"... ' % command)
         error_message = None
+        matched = False
+        for com in COMMANDS:
+            pattern, function = com
+            match = re.fullmatch(pattern, command)
+            if match:
+                # print('match found! %s' % str(pattern))
+                matched = True
+                # call function with captured values as args
+                try:
+                    function(*match.groups())
+                except Exception as e:
+                    error_message = str(e)
+        
+        if not matched:
+            error_message = 'command "%s" not recognized' % command
+        
         if error_message is None:
             logging.info('Command executed successfully')
         else:
             logging.error('Command failed with error message: %s' % error_message)
+        
         return error_message
     
     # download the next tasks from the server
@@ -62,18 +103,18 @@ class Client:
             'password': UPLOAD_PASSWORD,
             'sensors': [
                 {
-                    'sensor_name': 'soil moisture sensor',
+                    'sensor_name': 'Roberto Moisture Sensor',
                     'value': read_moisture_sensor(),
                     'time': round(time.time()),
                 },
                 {
-                    'sensor_name': 'test sensor 2',
-                    'value': random(),
+                    'sensor_name': 'Light Sensor',
+                    'value': read_light_sensor(),
                     'time': round(time.time()),
                 }
             ]
         }
-        print(status_update)
+        # print(status_update)
         logging.info('Done')
 
         logging.info('Posting sensor update... ')
@@ -90,8 +131,11 @@ class Client:
             'task_id': task['task_id'],
             'completion_time': round(time.time())   # TODO: fix internal server error with this response body
         }
-        requests.post(TASK_NOTIFICATION_URL, json=status_update)
-        logging.info('Done')
+        response = requests.post(TASK_NOTIFICATION_URL, json=status_update)
+        if response.ok:
+            logging.info('Task completion notification posted successfully')
+        else:
+            logging.error('Failed to post task completion notification with status code: %s (%s)' % (response.status_code, response.reason))
 
     def _run_tasks(self):
         time.sleep(1)   # allow self.start() to finish gracefully
@@ -138,6 +182,7 @@ class Client:
         self.quit_event.set()
         self.tasks_worker.join()
         self.status_updates_worker.join()
+        cleanup_io()
         logging.info('Done')
     
     def run_forever(self):

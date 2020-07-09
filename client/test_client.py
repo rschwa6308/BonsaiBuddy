@@ -1,9 +1,12 @@
 import requests, json
 import datetime
 import time
+import os
 
 
-UPLOAD_PASSWORD = 'password'
+MANAGER_URL = 'https://bonsai-buddy-controller.herokuapp.com'
+
+UPLOAD_PASSWORD = os.environ.get('UPLOAD_PASSWORD')
 
 # data = {
 #     'password': UPLOAD_PASSWORD,
@@ -28,4 +31,4 @@ data = {
     'task_id': 1,
     'completion_time': round(time.time())
 }
-response = requests.post('http://localhost:8000/notify_task/', json=data)
+response = requests.post('%s/notify_task/' % MANAGER_URL, json=data)
