@@ -5,6 +5,7 @@ import threading, time, logging
 from random import random
 import signal
 import re
+import os
 
 from hardware_interfacing import read_moisture_sensor, read_light_sensor, pump_volume_with_target_pos, cleanup_io
 
@@ -17,14 +18,14 @@ logging.basicConfig(level=logging.INFO, format='%(threadName)s:\t%(message)s')
 EVENT_EXECUTION_PERIOD = 30
 
 # amount of time between GET/POST requests (seconds)
-BATCH_UPDATE_PERIOD = 30 # * 60   # every 30 minutes
+BATCH_UPDATE_PERIOD = 60 * 60   # every 60 minutes
 
 
-BASE_URL = 'http://192.168.1.156:8000/'
+BASE_URL = 'https://bonsai-buddy-controller.herokuapp.com/'
 TASKS_UPDATE_URL = urljoin(BASE_URL, 'next_tasks/')
 SENSOR_UPDATE_URL = urljoin(BASE_URL, 'sensor_update/')
 TASK_NOTIFICATION_URL = urljoin(BASE_URL, 'notify_task/')
-UPLOAD_PASSWORD = 'password'
+UPLOAD_PASSWORD = os.environ.get('UPLOAD_PASSWORD')
 
 
 def do_nothing():
@@ -59,14 +60,14 @@ class Client:
 
     # execute the given command; return an error message if execution fails
     def execute_command(self, command):
-        logging.info('Executing command: %s... ' % command)
+        logging.info('Executing command: "%s"... ' % command)
         error_message = None
         matched = False
         for com in COMMANDS:
             pattern, function = com
             match = re.fullmatch(pattern, command)
             if match:
-                print('match found! %s' % str(pattern))
+                # print('match found! %s' % str(pattern))
                 matched = True
                 # call function with captured values as args
                 try:
@@ -100,12 +101,12 @@ class Client:
             'password': UPLOAD_PASSWORD,
             'sensors': [
                 {
-                    'sensor_name': 'soil moisture sensor',
+                    'sensor_name': 'Roberto Moisture Sensor',
                     'value': read_moisture_sensor(),
                     'time': round(time.time()),
                 },
                 {
-                    'sensor_name': 'light sensor',
+                    'sensor_name': 'Light Sensor',
                     'value': read_light_sensor(),
                     'time': round(time.time()),
                 }
