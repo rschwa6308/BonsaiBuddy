@@ -7,7 +7,7 @@ import signal
 import re
 import os
 
-from hardware_interfacing import read_moisture_sensor, read_light_sensor, pump_volume_with_target_pos, cleanup_io
+from hardware_interfacing import read_moisture_sensor, read_light_sensor, pump_volume, cleanup_io
 
 
 # set logging output format
@@ -25,24 +25,26 @@ BASE_URL = 'https://bonsai-buddy-controller.herokuapp.com/'
 TASKS_UPDATE_URL = urljoin(BASE_URL, 'next_tasks/')
 SENSOR_UPDATE_URL = urljoin(BASE_URL, 'sensor_update/')
 TASK_NOTIFICATION_URL = urljoin(BASE_URL, 'notify_task/')
-UPLOAD_PASSWORD = os.environ.get('UPLOAD_PASSWORD')
+
+# UPLOAD_PASSWORD = os.environ.get('UPLOAD_PASSWORD')
+from secrets import UPLOAD_PASSWORD
 
 
 def do_nothing():
     print('Doing nothing!!!')
 
 
-TARGET_POS_MAP = {
-    'ROBERTO':      0.4,
-    'TEST_TARGET':  0.7
-}
+# TARGET_POS_MAP = {
+#     'ROBERTO':      0.4,
+#     'TEST_TARGET':  0.7
+# }
 
 def pump_volume_with_target_name(volume, target_name):
-    target_pos = TARGET_POS_MAP[target_name.upper()]
-    pump_volume_with_target_pos(int(volume), target_pos)
+    # target_pos = TARGET_POS_MAP[target_name.upper()]
+    # pump_volume_with_target_pos(int(volume), target_pos)
+    pump_volume(volume)
 
 
-# TODO: test this boi
 COMMANDS = [
     (r'NOOP', do_nothing),
     (r'pump (\d+)ml to (\w+)', pump_volume_with_target_name)
@@ -129,8 +131,11 @@ class Client:
             'task_id': task['task_id'],
             'completion_time': round(time.time())   # TODO: fix internal server error with this response body
         }
-        requests.post(TASK_NOTIFICATION_URL, json=status_update)
-        logging.info('Done')
+        response = requests.post(TASK_NOTIFICATION_URL, json=status_update)
+        if response.ok:
+            logging.info('Task completion notification posted successfully')
+        else:
+            logging.error('Failed to post task completion notification with status code: %s (%s)' % (response.status_code, response.reason))
 
     def _run_tasks(self):
         time.sleep(1)   # allow self.start() to finish gracefully
