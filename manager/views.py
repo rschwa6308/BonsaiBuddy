@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging, os
 
 from .models import Task, Sensor, SensorReading, Plant
@@ -15,10 +15,19 @@ from .models import Task, Sensor, SensorReading, Plant
 logger = logging.getLogger('tasks')
 
 
+# The longest the client can be silent for and still be considered 'OK'
+CLIENT_SILENCE_PERIOD = timedelta(hours=1)
+
 def home(request):
+    last_update_time = SensorReading.objects.latest('time').time
+    client_ok = datetime.now() - last_update_time < CLIENT_SILENCE_PERIOD
     return render(
         request,
-        'manager/home.html'
+        'manager/home.html',
+        {
+            'last_update_time': last_update_time,
+            'client_ok': client_ok,
+        }
     )
 
 
@@ -105,7 +114,7 @@ def next_tasks(request):
 
 UPLOAD_PASSWORD = os.environ.get('UPLOAD_PASSWORD')     # provided by heroku Config Vars
 
-@csrf_exempt 
+@csrf_exempt
 def sensor_update(request):
     if request.method != 'POST':
         return HttpResponse()

@@ -16,4 +16,5 @@
         <li><a href={% url 'task_history' %}>History</a></li>
         <li><a href={% url 'admin:index' %}>Admin</a></li>
     </ul>
+    <p>Client Status: {% if client_ok %}✔ OK ✔{% else %}✘ OFFLINE ✘{% endif %}   (last update: {{ last_update_time }})</p>
 {% endblock %}
