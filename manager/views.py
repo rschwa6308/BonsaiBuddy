@@ -19,8 +19,13 @@ logger = logging.getLogger('tasks')
 CLIENT_SILENCE_PERIOD = timedelta(hours=1)
 
 def home(request):
-    last_update_time = SensorReading.objects.latest('time').time
-    client_ok = datetime.now() - last_update_time < CLIENT_SILENCE_PERIOD
+    try:
+        last_update_time = SensorReading.objects.latest('time').time
+        client_ok = datetime.now() - last_update_time < CLIENT_SILENCE_PERIOD
+    except SensorReading.DoesNotExist:
+        last_update_time = None #datetime(year=1, month=1, day=1)
+        client_ok = False
+    
     return render(
         request,
         'manager/home.html',
@@ -106,7 +111,7 @@ def next_tasks(request):
         'task_id': task.id,
         'command': task.command,
         'next_time': task.next_scheduled_time.timestamp()
-    } for task in Task.objects.all()]
+    } for task in Task.objects.filter(enabled=True)]
     return JsonResponse({
         'scheduled_tasks': tasks
     })

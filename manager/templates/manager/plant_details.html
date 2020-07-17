@@ -12,7 +12,7 @@
     <h3>Tasks</h3>
     <ul>
     {% for task in plant.get_tasks %}
-        <li><a href="{% url 'task_details' task.id %}">{{ task.name|title }}</a> scheduled for <b>{{ task.next_scheduled_time.date }}</b> at <b>{{ task.next_scheduled_time.time }}</b></li>
+        <li><a href="{% url 'task_details' task.id %}">{{ task.name|title }}</a> scheduled for <b>{{ task.next_scheduled_time.date }}</b> at <b>{{ task.next_scheduled_time.time }}</b>{% if task.enabled is False %} (✗ disabled ✗){% endif %}</li>
     {% endfor %}
     </ul>
 

@@ -10,6 +10,8 @@ class Task(models.Model):
     period = models.DurationField()
     last_completed_time = models.DateTimeField()
 
+    enabled = models.BooleanField(default=True)
+
     @property
     def next_scheduled_time(self):
         return self.last_completed_time + self.period
