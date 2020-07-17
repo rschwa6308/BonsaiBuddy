@@ -14,6 +14,7 @@
     <p>Period: {{ task.period }}</p>
     <p>Last completed: {{ task.last_completed_time.date }} at {{ task.last_completed_time.time }}</p>
     <p>Next scheduled: {{ task.next_scheduled_time.date }} at {{ task.next_scheduled_time.time }}</p>
+    <p>Status: {% if task.enabled %}✓ enabled ✓{% else %}✗ disabled ✗{% endif %}</p>
 {% endblock %}
 
 {% block edit_url %}
