@@ -1,7 +1,7 @@
 # BonsaiBuddy
 An automated system for watering and monitoring house plants
 
-Check it out here! https://bonsai-buddy-controller.herokuapp.com/
+The system is live! Check it out here: https://bonsai-buddy-controller.herokuapp.com/
 
 ![Hardware Photo](/images/hardware_photo_markup.png)
 
